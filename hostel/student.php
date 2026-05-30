@@ -2,6 +2,7 @@
 // student.php — Student portal entry (name-based lookup)
 require_once 'includes/config.php';
 require_once 'includes/auth.php';
+// Making sure the student portal doesn't stop the Admin portal and vice versa
 if (session_status() === PHP_SESSION_NONE) {
   session_name('hms_student');
   session_start();
