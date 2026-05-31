@@ -2,6 +2,10 @@
 
 A full CRUD hostel management system built with HTML, CSS, JavaScript, PHP, and MySQL (XAMPP). No frameworks used — everything is written from scratch.
 
+![Dashboard UI](figma/DashBoard.png)
+
+> **_This image is a rough sketch of the actual dashboard , I am not the best UI designer._**
+
 ---
 
 ## Setup Instructions
@@ -41,7 +45,7 @@ Open your browser: http://localhost/Hostel/
 
 > Admin password can be changed from the dashboard Quick Actions panel.
 
-> Naturally an error will be shown if you enter a student that isn't registered yet.
+> Naturally an error will show if you enter a student that isn't registered yet.
 
 ---
 
@@ -98,7 +102,7 @@ Hostel/
 ├── fees.php                   # Fee management
 ├── notices.php                # Notice board
 ├── change-password.php        # Admin password change
-├── generate-students.php      # Demo student generator (delete before live)
+├── generator.php              # Demo student generator (delete before live)
 ├── schema.sql                 # Database schema + seed data
 ├── css/
 │   └── style.css              # Full stylesheet
