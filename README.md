@@ -38,7 +38,7 @@ Open your browser: http://localhost/hostel/
 | -------- | -------- |
 | admin    | admin123 |
 
-> To change the password: generate a new bcrypt hash with `password_hash('yourpassword', PASSWORD_DEFAULT)` and UPDATE the admin table.
+> To change the password: there is a quick action option for you to change your password.
 
 ---
 
