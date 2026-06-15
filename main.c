@@ -68,24 +68,21 @@ int main()
 
     double highest = s1.hp;
 
-    for (int i = 0; i < 4; ++i)
+    if (s2.hp > highest)
     {
-        if (s2.hp > highest)
-        {
-            highest = s2.hp;
-        }
-        else if (s3.hp > highest)
-        {
-            highest = s3.hp;
-        }
-        else if (s4.hp > highest)
-        {
-            highest = s4.hp;
-        }
-        else
-        {
-            // nothing as the s1.hp will be called the highest as default
-        }
+        highest = s2.hp;
+    }
+    else if (s3.hp > highest)
+    {
+        highest = s3.hp;
+    }
+    else if (s4.hp > highest)
+    {
+        highest = s4.hp;
+    }
+    else
+    {
+        // nothing as the s1.hp will be called the highest as default
     }
 
     printf("The highest hp is: %.2lf ", highest);
