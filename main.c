@@ -78,9 +78,13 @@ int main()
         {
             highest = s3.hp;
         }
-        else
+        else if (s4.hp > highest)
         {
             highest = s4.hp;
+        }
+        else
+        {
+            // nothing as the s1.hp will be called the highest
         }
     }
 
