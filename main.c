@@ -88,7 +88,7 @@ int main()
         }
     }
 
-    printf("The highest hp is: %lf ", highest);
+    printf("The highest hp is: %.2lf ", highest);
 
     return 0;
 }
