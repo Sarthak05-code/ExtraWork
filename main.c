@@ -61,7 +61,28 @@ int main()
     Character_3 s3 = {"Ashveil", array[2], "Follow-up attack buff", &buff_val3, &damage_val3};
     Character_4 s4 = {"Acheron", array[3], "Def-shred", &self_buff_val4, &damage_val4};
 
+    printf("The name of the first character is : %s\n" , s1.name);
+    printf("The name of the second character is : %s\n" , s2.name);
+    printf("The name of the third character is : %s\n" , s3.name);
+    printf("The name of the fourth character is : %s\n" , s4.name);
+
+    double *highest = &s1.hp;
+
+    for(int i = 0 ; i < 4 ; ++i) {
+        if(&s2.hp > highest) {
+            highest = &s2.hp;
+        } else if (&s3.hp > highest) {
+            highest = &s3.hp;
+        } else {
+            highest = &s4.hp;
+        }
+    }
+
+    printf("The highest hp is: %lf ", highest );
+
     
+    
+
 
     return 0;
 }
