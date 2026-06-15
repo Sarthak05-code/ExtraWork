@@ -1,0 +1,21 @@
+name : C CI
+
+on: 
+    push:
+        branches : [main]
+        paths:
+            - "**/*.c"
+    pull_request:
+        paths:
+            - "**/*.c"
+    
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - name: Compile all C files
+              run : |
+                 for f in $(find . -name "*.c"); do
+                    gcc -Wall -Wextra -fsyntax-only "$f" || exit 1
+                 done
