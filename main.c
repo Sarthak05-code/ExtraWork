@@ -84,7 +84,7 @@ int main()
         }
         else
         {
-            // nothing as the s1.hp will be called the highest
+            // nothing as the s1.hp will be called the highest as default
         }
     }
 
