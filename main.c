@@ -61,7 +61,7 @@ int main()
     Character_3 s3 = {"Ashveil", array[2], "Follow-up attack buff", &buff_val3, &damage_val3};
     Character_4 s4 = {"Acheron", array[3], "Def-shred", &self_buff_val4, &damage_val4};
 
-    printf("Hello  , this world");
+    
 
     return 0;
 }
