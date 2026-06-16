@@ -1,0 +1,28 @@
+name: Web CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "**/*.html"
+      - "**/*.js"
+  pull_request:
+    paths:
+      - "**/*.html"
+      - "**/*.js"
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Check JS syntax
+        run: |
+          for f in $(find . -name "*.js"); do
+            node --check "$f" || exit 1
+          done
