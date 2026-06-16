@@ -11,6 +11,7 @@ const fetchData = async () => {
             <td>${products[i].title}</td>
             <td>${products[i].price}</td>
             <td>${products[i].category}</td>
+            <td>${products[i].discountPercentage}</td>
 
         `
         tbody.appendChild(row)
