@@ -1,136 +1,135 @@
+/*
+ * Rotating ASCII Cube
+ * ---------------------------------------------------------
+ * A full 6-face rotating cube rendered with ASCII characters,
+ * using a z-buffer for hidden surface removal.
+ *
+ * Cross-platform: works on Windows (MSYS2/MinGW, MSVC) and
+ * Linux/macOS without needing usleep() or POSIX-only headers.
+ *
+ * Compile (MSYS2 / MinGW / Linux / macOS):
+ *   gcc rotating_cube.c -o cube.exe -lm
+ *   ./cube.exe
+ *
+ * If you're running this in plain Windows cmd.exe and the
+ * screen doesn't clear properly, run it from Windows Terminal,
+ * or MSYS2's terminal instead -- both support ANSI escape codes.
+ * ---------------------------------------------------------
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <pthread.h>
-#include <unistd.h>
+#include <math.h>
+#include <string.h>
 
-#define N 5
-#define MAX_CYCLES 5
-#define LEFT(id)  ((id + N - 1) % N)
-#define RIGHT(id) ((id + 1) % N)
+#ifdef _WIN32
+    #include <windows.h>
+    #define SLEEP_MS(ms) Sleep(ms)
+#else
+    #include <unistd.h>
+    #define SLEEP_MS(ms) usleep((ms) * 1000)
+#endif
 
-typedef enum { THINKING, HUNGRY, EATING } state_t;
+/* ---------- configuration ---------- */
+#define WIDTH        120
+#define HEIGHT       40
+#define CUBE_WIDTH   12.0f
+#define STEP         0.6f      /* surface sampling resolution   */
+#define DISTANCE     60.0f     /* distance of cube from viewer  */
+#define K1           40.0f     /* projection scale factor       */
+#define ROT_SPEED    0.03f     /* radians per frame              */
+#define FRAME_DELAY  16        /* ms between frames (~60 fps)   */
 
-state_t state[N];
-int meals_eaten[N] = {0};
+/* ---------- globals ---------- */
+static float angleA = 0, angleB = 0, angleC = 0;
+static float zBuffer[WIDTH * HEIGHT];
+static char  screen[WIDTH * HEIGHT];
 
-pthread_mutex_t mutex;          // protects shared state[] array
-pthread_cond_t cond[N];         // one condition variable per philosopher
-pthread_t philosophers[N];
+/* ---------- 3D rotation ---------- */
+static void rotate(float x, float y, float z, float *ox, float *oy, float *oz) {
+    /* rotate around X */
+    float y1 = y * cosf(angleA) - z * sinf(angleA);
+    float z1 = y * sinf(angleA) + z * cosf(angleA);
 
-void print_state()
-{
-    printf("\033[H\033[2J"); // clear screen for a live "dashboard" view
-    printf("Philosopher states:\n");
-    for (int i = 0; i < N; i++)
-    {
-        const char *s = state[i] == THINKING ? "THINKING" :
-                         state[i] == HUNGRY   ? "HUNGRY"   : "EATING";
-        printf("  P%d: %-8s (meals eaten: %d)\n", i, s, meals_eaten[i]);
-    }
-    printf("\n");
+    /* rotate around Y */
+    float x2 = x * cosf(angleB) + z1 * sinf(angleB);
+    float z2 = -x * sinf(angleB) + z1 * cosf(angleB);
+
+    /* rotate around Z */
+    float x3 = x2 * cosf(angleC) - y1 * sinf(angleC);
+    float y3 = x2 * sinf(angleC) + y1 * cosf(angleC);
+
+    *ox = x3;
+    *oy = y3;
+    *oz = z2;
 }
 
-// Check if philosopher i can start eating:
-// it must be HUNGRY and neither neighbor can currently be EATING.
-void test(int i)
-{
-    if (state[i] == HUNGRY &&
-        state[LEFT(i)] != EATING &&
-        state[RIGHT(i)] != EATING)
-    {
-        state[i] = EATING;
-        print_state();
-        pthread_cond_signal(&cond[i]); // wake up philosopher i if it was waiting
+/* ---------- plot one surface point ---------- */
+static void plot(float x, float y, float z, char ch) {
+    float rx, ry, rz;
+    rotate(x, y, z, &rx, &ry, &rz);
+    rz += DISTANCE;
+
+    float ooz = 1.0f / rz;
+    int xp = (int)(WIDTH / 2 + K1 * ooz * rx * 2);
+    int yp = (int)(HEIGHT / 2 + K1 * ooz * ry);
+
+    int idx = xp + yp * WIDTH;
+    if (idx >= 0 && idx < WIDTH * HEIGHT) {
+        if (ooz > zBuffer[idx]) {
+            zBuffer[idx] = ooz;
+            screen[idx] = ch;
+        }
     }
 }
 
-void think(int id)
-{
-    sleep(rand() % 2 + 1);
+/* ---------- render one full cube face ---------- */
+static void renderFace(int axis, float fixedValue, char ch) {
+    for (float i = -CUBE_WIDTH; i < CUBE_WIDTH; i += STEP) {
+        for (float j = -CUBE_WIDTH; j < CUBE_WIDTH; j += STEP) {
+            switch (axis) {
+                case 0: plot(fixedValue, i, j, ch); break; /* +-X face */
+                case 1: plot(i, fixedValue, j, ch); break; /* +-Y face */
+                case 2: plot(i, j, fixedValue, ch); break; /* +-Z face */
+            }
+        }
+    }
 }
 
-void eat(int id)
-{
-    sleep(rand() % 2 + 1);
-}
+int main(void) {
+#ifdef _WIN32
+    /* enable ANSI escape code support on modern Windows terminals */
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    DWORD mode = 0;
+    GetConsoleMode(hOut, &mode);
+    SetConsoleMode(hOut, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+#endif
 
-void take_forks(int id)
-{
-    pthread_mutex_lock(&mutex);
-    state[id] = HUNGRY;
-    print_state();
-    test(id); // see if we can eat immediately
+    while (1) {
+        memset(screen, ' ', sizeof(screen));
+        memset(zBuffer, 0, sizeof(zBuffer));
 
-    // If we couldn't transition to EATING, wait until signaled by a neighbor
-    while (state[id] != EATING)
-    {
-        pthread_cond_wait(&cond[id], &mutex);
-    }
-    pthread_mutex_unlock(&mutex);
-}
+        renderFace(0,  CUBE_WIDTH, '@');  /* +X */
+        renderFace(0, -CUBE_WIDTH, '#');  /* -X */
+        renderFace(1,  CUBE_WIDTH, '$');  /* +Y */
+        renderFace(1, -CUBE_WIDTH, '~');  /* -Y */
+        renderFace(2,  CUBE_WIDTH, ';');  /* +Z */
+        renderFace(2, -CUBE_WIDTH, '+');  /* -Z */
 
-void put_forks(int id)
-{
-    pthread_mutex_lock(&mutex);
-    state[id] = THINKING;
-    meals_eaten[id]++;
-    print_state();
+        /* clear screen + move cursor home, then draw frame */
+        printf("\x1b[H\x1b[2J");
+        for (int row = 0; row < HEIGHT; row++) {
+            fwrite(&screen[row * WIDTH], 1, WIDTH, stdout);
+            putchar('\n');
+        }
+        fflush(stdout);
 
-    // Re-check neighbors: they may now be able to eat
-    test(LEFT(id));
-    test(RIGHT(id));
-    pthread_mutex_unlock(&mutex);
-}
+        angleA += ROT_SPEED;
+        angleB += ROT_SPEED * 0.7f;
+        angleC += ROT_SPEED * 0.5f;
 
-void *philosopher_routine(void *args)
-{
-    int id = *(int *)args;
-
-    for (int cycle = 0; cycle < MAX_CYCLES; cycle++)
-    {
-        think(id);
-        take_forks(id);
-        eat(id);
-        put_forks(id);
-    }
-    return NULL;
-}
-
-int main()
-{
-    int ids[N];
-
-    pthread_mutex_init(&mutex, NULL);
-    for (int i = 0; i < N; i++)
-    {
-        state[i] = THINKING;
-        pthread_cond_init(&cond[i], NULL);
-    }
-
-    for (int i = 0; i < N; i++)
-    {
-        ids[i] = i;
-        pthread_create(&philosophers[i], NULL, philosopher_routine, &ids[i]);
-    }
-
-    for (int i = 0; i < N; i++)
-    {
-        pthread_join(philosophers[i], NULL);
-    }
-
-    printf("\nFinal meal counts:\n");
-    for (int i = 0; i < N; i++)
-    {
-        printf("  Philosopher %d ate %d times\n", i, meals_eaten[i]);
-    }
-
-    pthread_mutex_destroy(&mutex);
-    for (int i = 0; i < N; i++)
-    {
-        pthread_cond_destroy(&cond[i]);
+        SLEEP_MS(FRAME_DELAY);
     }
 
     return 0;
 }
-
-
