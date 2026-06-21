@@ -6,7 +6,7 @@ function main() {
     */
 
   var a = 15,
-    b = 10;
+  b = 10;
   add = a + b;
   sub = a - b;
   product = a * b;
