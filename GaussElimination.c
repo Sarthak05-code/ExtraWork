@@ -1,57 +1,34 @@
 #include <stdio.h>
+#include <math.h>
 
-#define N 3 // number of equations (change as needed)
-
-void printMatrix(float a[N][N + 1]) {
-    for (int i = 0; i < N; i++) {
-        for (int j = 0; j <= N; j++)
-            printf("%8.3f ", a[i][j]);
-        printf("\n");
-    }
+// g(x) = cube root of (2x - 5)
+double g(double x) {
+    return cbrt(2*x - 5);
 }
 
 int main() {
-    // Augmented matrix [A | b], size N x (N+1)
-    float a[N][N + 1] = {
-        {2, 1, -1, 8},
-        {-3, -1, 2, -11},
-        {-2, 1, 2, -3}
-    };
+    double x0 = -2.5;   // initial guess (negative root region)
+    double x1;
+    double tolerance = 0.01;
+    int i = 0, maxIterations = 100;
 
-    float x[N]; // solution vector
+    printf("Iteration\t x0\t\t x1\n");
 
-    printf("Initial Augmented Matrix:\n");
-    printMatrix(a);
+    while (i < maxIterations) {
 
-    // Forward Elimination
-    for (int k = 0; k < N - 1; k++) {
-        for (int i = k + 1; i < N; i++) {
-            if (a[k][k] == 0) {
-                printf("Mathematical Error: zero pivot encountered!\n");
-                return 1;
-            }
-            float factor = a[i][k] / a[k][k];
-            for (int j = k; j <= N; j++) {
-                a[i][j] = a[i][j] - factor * a[k][j];
-            }
+        x1 = g(x0);
+
+        printf("%d\t\t %.5lf\t %.5lf\n", i + 1, x0, x1);
+
+        if (fabs(x1 - x0) < tolerance) {
+            break;
         }
+
+        x0 = x1;
+        i++;
     }
 
-    printf("\nMatrix after Forward Elimination:\n");
-    printMatrix(a);
-
-    // Back Substitution
-    for (int i = N - 1; i >= 0; i--) {
-        x[i] = a[i][N];
-        for (int j = i + 1; j < N; j++) {
-            x[i] -= a[i][j] * x[j];
-        }
-        x[i] /= a[i][i];
-    }
-
-    printf("\nSolution:\n");
-    for (int i = 0; i < N; i++)
-        printf("x%d = %.4f\n", i + 1, x[i]);
+    printf("\nApproximate Root = %.5lf\n", x1);
 
     return 0;
 }
