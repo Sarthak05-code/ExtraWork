@@ -1,1 +1,5 @@
 *.exe
+*.clangd
+.zed/
+compile_flags.txt
+*.class
