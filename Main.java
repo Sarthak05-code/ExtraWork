@@ -1,29 +1,56 @@
 public class Main {
-
     public static void main(String[] args) {
-        Caller caller  = new Caller();
-        caller.runner();
-        caller.Text();
+        Employee[] staffs = {
+            new Manager("Alice", 50000, 5),
+            new Developer("Sarthak", 125000, 12)
+        };
+        for (Employee a : staffs) {
+            a.printpaySlip();
+        }
     }
 }
 
+abstract class Employee {
+    protected String name;
+    protected double baseSalary;
 
-interface Name{
-    public void runner();
+    public Employee(String name , double baseSalary) {
+        this.name = name;
+        this.baseSalary = baseSalary;
+    }
+
+    public void printpaySlip() {
+        System.out.println("Employee: " + name);
+        System.out.println("Salary : " + baseSalary);
+        System.out.println("Bonus: " + calculateBonus());
+        System.out.println("Total: " + (baseSalary +  calculateBonus()));
+    }
+
+    public abstract double calculateBonus();
 }
 
-abstract class Mainer {
-    public abstract void Text();
-}
-
-class Caller extends Mainer implements Name {
-    @Override
-    public void runner() {
-        System.out.println("This should work as intended. ");
+class Manager extends Employee {
+    private int teamSize;
+    public Manager(String name , double baseSalary , int teamSize) {
+        super(name, baseSalary);
+        this.teamSize = teamSize;
     }
 
     @Override
-    public void Text() {
-        System.out.println("This should also work. ");
+    public double calculateBonus() {
+        return teamSize * 500;
+    }
+}
+
+class Developer extends Employee {
+    private int projectCompleted;
+    public Developer(String name , double baseSalary , int projectCompleted) {
+        super(name, baseSalary);
+        this.projectCompleted = projectCompleted;
+    }
+
+    @Override
+    public double calculateBonus() {
+        return projectCompleted * 1000;
     }
 }
