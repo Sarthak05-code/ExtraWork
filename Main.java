@@ -1,56 +1,32 @@
+import java.util.List;
+import java.util.stream.*;
+
 public class Main {
+
     public static void main(String[] args) {
-        Employee[] staffs = {
-            new Manager("Alice", 50000, 5),
-            new Developer("Sarthak", 125000, 12)
-        };
-        for (Employee a : staffs) {
-            a.printpaySlip();
-        }
+        List<Student> students = List.of(
+            new Student("Sarthak", 76),
+            new Student("Harry", 10),
+            new Student("Sagar", 11),
+            new Student("Kumar", 55)
+        );
+
+        final List<String> toppers = students.stream()
+                    .filter(s -> s.marks >= 50)
+                    .sorted((a , b) -> b.marks - a.marks)
+                    .map(s -> s.name)
+                    .collect(Collectors.toList());
+
+        System.out.println(toppers);
     }
 }
 
-abstract class Employee {
-    protected String name;
-    protected double baseSalary;
+class Student {
+    String name;
+    int marks;
 
-    public Employee(String name , double baseSalary) {
+    Student(String name , int marks) {
         this.name = name;
-        this.baseSalary = baseSalary;
-    }
-
-    public void printpaySlip() {
-        System.out.println("Employee: " + name);
-        System.out.println("Salary : " + baseSalary);
-        System.out.println("Bonus: " + calculateBonus());
-        System.out.println("Total: " + (baseSalary +  calculateBonus()));
-    }
-
-    public abstract double calculateBonus();
-}
-
-class Manager extends Employee {
-    private int teamSize;
-    public Manager(String name , double baseSalary , int teamSize) {
-        super(name, baseSalary);
-        this.teamSize = teamSize;
-    }
-
-    @Override
-    public double calculateBonus() {
-        return teamSize * 500;
-    }
-}
-
-class Developer extends Employee {
-    private int projectCompleted;
-    public Developer(String name , double baseSalary , int projectCompleted) {
-        super(name, baseSalary);
-        this.projectCompleted = projectCompleted;
-    }
-
-    @Override
-    public double calculateBonus() {
-        return projectCompleted * 1000;
+        this.marks = marks;
     }
 }
