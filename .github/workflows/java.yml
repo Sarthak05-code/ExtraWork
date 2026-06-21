@@ -3,11 +3,9 @@ on:
   push:
     branches: [main]
     paths:
-      - "**/pom.xml"
       - "**/*.java"
   pull_request:
     paths:
-      - "**/pom.xml"
       - "**/*.java"
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -21,12 +19,9 @@ jobs:
         with:
           java-version: "25"
           distribution: "temurin"
-          cache: maven
-          cache-dependency-path: "**/pom.xml"
-      - name: Build all Maven projects
+      - name: Compile all Java files
         run: |
-          for pom in $(find . -name "pom.xml"); do
-            dir=$(dirname "$pom")
-            echo "Building $dir"
-            (cd "$dir" && mvn -B clean package -DskipTests) || exit 1
+          for file in $(find . -name "*.java"); do
+            echo "Compiling $file"
+            javac "$file" || exit 1
           done
