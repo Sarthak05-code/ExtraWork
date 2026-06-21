@@ -1,5 +1,4 @@
 name: Java CI
-
 on:
   push:
     branches: [main]
@@ -23,6 +22,7 @@ jobs:
           java-version: "25"
           distribution: "temurin"
           cache: maven
+          cache-dependency-path: "**/pom.xml"
       - name: Build all Maven projects
         run: |
           for pom in $(find . -name "pom.xml"); do
