@@ -1,6 +1,20 @@
 public class Main {
 
     public static void main(String[] args) {
-        System.out.println("Hello, world");
+        Caller caller  = new Caller();
+        caller.runner();
+    }
+}
+
+
+interface Name{
+    public void runner();
+}
+
+
+class Caller implements Name {
+    @Override
+    public void runner() {
+        System.out.println("This should work as intended. ");
     }
 }
