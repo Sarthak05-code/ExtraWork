@@ -1,5 +1,5 @@
 import java.util.List;
-import java.util.stream.*;
+
 
 public class Main {
 
@@ -11,11 +11,11 @@ public class Main {
             new Student("Kumar", 55)
         );
 
-        final List<String> toppers = students.stream()
+        List<String> toppers = students.stream()
                     .filter(s -> s.marks >= 50)
                     .sorted((a , b) -> b.marks - a.marks)
                     .map(s -> s.name)
-                    .collect(Collectors.toList());
+                    .toList();
 
         System.out.println(toppers);
     }
