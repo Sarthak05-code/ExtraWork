@@ -1,12 +1,12 @@
 function main() {
   // this is a comment
   /*
-        this is a 
+        this is a
         multi line comment
     */
-
+  console.log("Basic Operators: !");
   var a = 15,
-  b = 10;
+    b = 10;
   add = a + b;
   sub = a - b;
   product = a * b;
@@ -17,65 +17,53 @@ function main() {
   console.log("The product is: " + product);
   console.log("The division is : " + div);
   console.log("The modulus is: " + mod);
-
+  console.log("Assignment Operator : !");
   // assignment operator
-  ((a = 20), (b = 11));
+  a = 20;
+  b = 11;
   a *= b;
-
-  a -= b;
-
-  a += b;
-
-  a /= b;
-
-  a %= b;
-  console.log("The new difference is: " + a);
   console.log("The new product is: " + a);
+  a -= b;
+  console.log("The new difference is: " + a);
+  a += b;
   console.log("The new sum is : " + a);
-
-  console.log("The new mod is: " + a);
-
+  a /= b;
   console.log("The new divide is :  " + a);
-
+  a %= b;
+  console.log("The new mod is: " + a);
   let avalue = 25,
     bvalue = 90,
     cvalue = 100;
-
+  console.log("IF-ELSE Statement");
   if (avalue >= bvalue) console.log("A is greater: ");
   else if (cvalue <= avalue) console.log("c is greater");
   else console.log("B is greater");
-
   name = "15";
   age = 15;
-
+  console.log("The if else with data-type and variable");
   if (name === age) console.log("They are the same ");
   else console.log("They arent equal");
-
   if (name != age) console.log("this is true");
   else console.log("This is false");
-
   let x = 10,
     y = 10,
     z = 10;
-
+  console.log("The and operator");
   if (x == y && y == z) console.log("They have the same value: ");
   else console.log("They dont have the same value");
-
   var value = -10;
-
+  console.log("Postive and Negative. ");
   if (value > 0) console.log("This is a positive number");
   else if (value < 0) console.log("this is a negative number");
   else console.log("This is a zero");
-
   var marks = 39;
-
+  console.log("If - else if - else");
   if (marks > 80) console.log("Distinction");
   else if (marks > 60 && marks <= 79) console.log("First Division");
   else if (marks > 40 && marks <= 59) console.log("Second Division");
   else console.log("Fail");
-
   var choice = "-";
-
+  console.log("Swtich statement");
   switch (choice) {
     case "+":
       console.log("You picked addition");
@@ -86,46 +74,39 @@ function main() {
     case "*":
       console.log("You picked production");
       break;
-
     case "/":
       console.log("You picked division");
       break;
-
     default:
       console.log("You picked the wrong choice");
       break;
   }
-
+  console.log("For Loops: ");
   for (var i = 0; i < 10; ++i) {
     console.log(i + 1);
   }
-
+  console.log("While loops");
   var i = 0;
   while (i < 10) {
     console.log(i + 1);
     i++;
   }
-
   var i = 0;
-
+  console.log("Do - while loop");
   do {
     console.log(i + 1);
     i++;
   } while (i < 10);
-
   console.log("\n");
-
+  console.log("The multiplication of 2. ");
   for (var i = 1; i <= 10; ++i) {
     console.log("2 x ", i, " = ", 2 * i);
   }
-
   var result = 1;
-
+  console.log("Factorial With loop, ");
   for (var i = 1; i <= 5; i++) {
     result *= i;
   }
-
   console.log("The factorial of 5 is : ", result);
 }
-
 main();
