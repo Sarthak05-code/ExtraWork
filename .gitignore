@@ -4,3 +4,12 @@
 compile_flags.txt
 *.class
 compile_commands.json
+
+
+broadcast-server.exe
+broadcast-server
+
+
+*.test
+
+*.out
