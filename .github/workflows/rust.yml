@@ -1,0 +1,29 @@
+name : Rust CI
+
+on:
+  push:
+    branches: [main]
+  pull_request: 
+    branches: [main]
+
+
+
+jobs:
+   build:
+     runs-on: Ubuntu-latest
+
+     steps:
+       - uses: actions/checkout@v4
+
+       - name : Install Rust
+         uses: dtolnay/rust-toolchain@stable
+         with :
+            toolchain : stable
+
+       - name : Build
+         run: cargo build --manifest-path hello_rust/Cargo.toml
+
+       - name : Test
+         run: cargo Test --manifest-path hello_rust/Cargo.toml
+          
+             
