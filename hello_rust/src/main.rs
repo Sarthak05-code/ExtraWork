@@ -1,53 +1,103 @@
-use std::sync::Arc;
-use tokio::sync::Mutex;
-use tokio::time::{Duration, sleep};
+use std::time::Duration;
+use tokio::sync::{mpsc};
+use tokio::time::sleep;
+use tokio_util::sync::CancellationToken;
+
+// Custom Error Type for robust error handling
+#[derive(Debug)]
+enum AppError {
+    FetchFailed,
+}
 
 #[tokio::main]
 async fn main() {
-    //Shared Counter
-    let counter = Arc::new(Mutex::new(0));
-    background_runner(counter.clone());
+    // 1. Initialize structured tracing/logging
+    tracing_subscriber::fmt::init();
+    tracing::info!("Starting the elevated async application...");
 
-    sleep(Duration::from_secs(5)).await;
+    // 2. Setup a CancellationToken for Graceful Shutdown
+    let cancel_token = CancellationToken::new();
+    
+    // 3. Setup an MPSC channel for sending metrics/pings from background to main
+    let (tx, mut rx) = mpsc::channel::<u32>(100);
 
-    println!("Fetching data...");
+    // Spawn the background runner, passing the cancellation token and channel transmitter
+    let background_cloned_token = cancel_token.clone();
+    tokio::spawn(async move {
+        background_runner(background_cloned_token, tx).await;
+    });
 
-    let data = fetch_data().await;
+    // --- Main Logic Execution ---
+    sleep(Duration::from_secs(3)).await;
+    tracing::info!("Fetching initial data...");
 
-    println!("Received: {}", data);
+    match fetch_data().await {
+        Ok(data) => tracing::info!(target: "network_events", "Received: {}", data),
+        Err(e) => tracing::error!("Failed to fetch data: {:?}", e),
+    }
 
+    // Execute concurrent tasks
     do_stuffs().await;
 
-    let seconds = *counter.lock().await;
-    println!("Program finished: ");
-    println!("Background task ran for {}seconds",seconds);
-}
+    // 4. Graceful Shutdown Trigger
+    tracing::info!("Initiating graceful shutdown of background tasks...");
+    cancel_token.cancel(); // Signals the background loop to break
 
-fn background_runner(counter : Arc<Mutex<i32>>) {
+    // Receive the final metrics report from the background task before exiting
+    let final_seconds = rx.recv().await.unwrap_or(0);
     
-    tokio::spawn(async move {
-        
-
-        loop {
-            sleep(Duration::from_secs(1)).await;
-            let mut value = counter.lock().await;
-            *value += 1;
-        }
-    });
+    tracing::info!("Program finished cleanly.");
+    tracing::info!("Background task ran for total of {} seconds.", final_seconds);
 }
 
+/// Background runner that respects cancellation and reports back via a channel
+async fn background_runner(token: CancellationToken, tx: mpsc::Sender<u32>) {
+    let mut seconds_elapsed = 0;
+
+    loop {
+        tokio::select! {
+            // Check if shutdown was requested
+            _ = token.cancelled() => {
+                tracing::info!("Background runner received shutdown signal. Sending final metrics...");
+                let _ = tx.send(seconds_elapsed).await; // Send final count back to main
+                break;
+            }
+            // Otherwise, perform the periodic tick
+            _ = sleep(Duration::from_secs(1)) => {
+                seconds_elapsed += 1;
+                tracing::debug!("Background tick: {}s", seconds_elapsed);
+            }
+        }
+    }
+}
+
+/// Executes concurrent operations handling idiomatic Results
 async fn do_stuffs() {
+    tracing::info!("Starting concurrent data fetches...");
+    
     let task_one = fetch_data();
     let task_two = fetch_data();
 
+    // Concurrently await both tasks
     let (res1, res2) = tokio::join!(task_one, task_two);
 
-    println!("{}", res1);
-    println!("{}", res2);
+    match (res1, res2) {
+        (Ok(r1), Ok(r2)) => {
+            tracing::info!("Both concurrent tasks succeeded!");
+            tracing::info!("Task 1: {}, Task 2: {}", r1, r2);
+        }
+        _ => tracing::error!("One or more concurrent tasks failed."),
+    }
 }
 
-async fn fetch_data() -> String {
+/// Simulates a real-world network fetch with robust Result types
+async fn fetch_data() -> Result<String, AppError> {
     sleep(Duration::from_secs(2)).await;
-
-    String::from("Hello from the async world!")
+    
+    // Simulate a successful fetch 90% of the time
+    if rand::random::<f32>() > 0.1 {
+        Ok(String::from("Hello from the elevated async world!"))
+    } else {
+        Err(AppError::FetchFailed)
+    }
 }
