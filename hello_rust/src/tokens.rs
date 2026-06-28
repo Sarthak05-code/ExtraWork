@@ -5,6 +5,14 @@ pub enum Token {
     Assign,
     Plus,
     Minus,
+    Star,
+    Slash,
+    Generate,
+    Field,
+    LeftParen,
+    RightParen,
+    LeftBrace,
+    RightBrace,
     EOF,
 }
 
@@ -15,5 +23,8 @@ pub enum Instruction {
     Store(usize),
     Add,
     Subtract,
+    Multiply,
+    Divide,
     Pop,
+    Print,
 }

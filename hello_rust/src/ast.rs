@@ -1,7 +1,7 @@
 // Inside src/ast.rs
 use crate::tokens::Token;
 
-#[derive(Debug)]
+#[derive(Debug ,Clone)]
 pub enum ASTNode {
     Program(Vec<ASTNode>), // 🌟 Added to support multiple lines!
     Number(i32),
@@ -15,4 +15,5 @@ pub enum ASTNode {
         op: Token,
         right: Box<ASTNode>,
     },
+    Generate(Box<ASTNode>),
 }

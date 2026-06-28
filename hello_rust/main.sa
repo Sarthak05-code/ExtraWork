@@ -1,4 +1,8 @@
-x = 22
-x = x - 5
-x = x
-x + 2
+field main() {
+    initial = 100
+    penalty = 25
+
+    score = initial - penalty
+    generate score
+
+}

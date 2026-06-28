@@ -31,9 +31,33 @@ impl Lexer {
                 self.position += 1;
                 Token::Minus
             }
+            '*' => {
+                self.position += 1;
+                Token::Star
+            }
+            '/' => {
+                self.position += 1;
+                Token::Slash
+            }
             '=' => {
                 self.position += 1;
                 Token::Assign
+            }
+            '(' => {
+                self.position += 1;
+                Token::LeftParen
+            }
+            ')' => {
+                self.position += 1;
+                Token::RightParen
+            }
+            '{' => {
+                self.position += 1;
+                Token::LeftBrace
+            }
+            '}' => {
+                self.position += 1;
+                Token::RightBrace
             }
             '0'..='9' => {
                 let start = self.position;
@@ -43,9 +67,20 @@ impl Lexer {
                 let text: String = self.input[start..self.position].iter().collect();
                 Token::Number(text.parse().unwrap())
             }
-            'a'..='z' => {
-                self.position += 1;
-                Token::Identifier(current.to_string())
+            'a'..='z' | 'A'..'Z' => {
+                let start = self.position;
+
+                while self.position < self.input.len() && self.input[self.position].is_alphabetic()
+                {
+                    self.position += 1;
+                }
+                let word: String = self.input[start..self.position].iter().collect();
+
+                match word.as_str() {
+                    "generate" => Token::Generate,
+                    "field" => Token::Field,
+                    _ => Token::Identifier(word),
+                }
             }
             _ => panic!("Unknown character {}", current),
         }
