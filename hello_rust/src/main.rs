@@ -1,103 +1,262 @@
-use std::time::Duration;
-use tokio::sync::{mpsc};
-use tokio::time::sleep;
-use tokio_util::sync::CancellationToken;
+use std::panic;
 
-// Custom Error Type for robust error handling
+#[derive(Debug, PartialEq, Clone)]
+enum Token {
+    Number(i32),
+    Identifier(String), // Track variable names like "x"
+    Assign,             // The '=' operator
+    Plus,
+    Minus,
+    EOF,
+}
+
+struct Lexer {
+    input: Vec<char>,
+    position: usize,
+}
+
+impl Lexer {
+    fn new(input: &str) -> Self {
+        Self {
+            input: input.chars().collect(),
+            position: 0,
+        }
+    }
+    
+    fn next_token(&mut self) -> Token {
+        while self.position < self.input.len() && self.input[self.position].is_whitespace() {
+            self.position += 1;
+        }
+        if self.position >= self.input.len() {
+            return Token::EOF;
+        }
+        let current = self.input[self.position];
+
+        match current {
+            '+' => { self.position += 1; Token::Plus }
+            '-' => { self.position += 1; Token::Minus }
+            '=' => { self.position += 1; Token::Assign }
+            '0'..='9' => {
+                let start = self.position;
+                while self.position < self.input.len() && self.input[self.position].is_numeric() {
+                    self.position += 1;
+                }
+                let text: String = self.input[start..self.position].iter().collect();
+                Token::Number(text.parse().unwrap())
+            }
+            // Recognize identifiers (single lowercase letters for simplicity, e.g., a-z)
+            'a'..='z' => {
+                self.position += 1;
+                Token::Identifier(current.to_string())
+            }
+            _ => panic!("Unknown character {}", current),
+        }
+    }
+}
+
 #[derive(Debug)]
-enum AppError {
-    FetchFailed,
+enum ASTNode {
+    Number(i32),
+    Variable(String),
+    Assignment {
+        name: String,
+        value: Box<ASTNode>,
+    },
+    BinaryOp {
+        left: Box<ASTNode>,
+        op: Token,
+        right: Box<ASTNode>,
+    },
 }
 
-#[tokio::main]
-async fn main() {
-    // 1. Initialize structured tracing/logging
-    tracing_subscriber::fmt::init();
-    tracing::info!("Starting the elevated async application...");
+struct Parser {
+    lexer: Lexer,
+    current_token: Token,
+}
 
-    // 2. Setup a CancellationToken for Graceful Shutdown
-    let cancel_token = CancellationToken::new();
-    
-    // 3. Setup an MPSC channel for sending metrics/pings from background to main
-    let (tx, mut rx) = mpsc::channel::<u32>(100);
-
-    // Spawn the background runner, passing the cancellation token and channel transmitter
-    let background_cloned_token = cancel_token.clone();
-    tokio::spawn(async move {
-        background_runner(background_cloned_token, tx).await;
-    });
-
-    // --- Main Logic Execution ---
-    sleep(Duration::from_secs(3)).await;
-    tracing::info!("Fetching initial data...");
-
-    match fetch_data().await {
-        Ok(data) => tracing::info!(target: "network_events", "Received: {}", data),
-        Err(e) => tracing::error!("Failed to fetch data: {:?}", e),
+impl Parser {
+    fn new(mut lexer: Lexer) -> Self {
+        let current_token = lexer.next_token();
+        Self { lexer, current_token }
     }
 
-    // Execute concurrent tasks
-    do_stuffs().await;
+    fn advance(&mut self) {
+        self.current_token = self.lexer.next_token();
+    }
 
-    // 4. Graceful Shutdown Trigger
-    tracing::info!("Initiating graceful shutdown of background tasks...");
-    cancel_token.cancel(); // Signals the background loop to break
+    fn parser(&mut self) -> ASTNode {
+        // If an identifier is followed by an '=', handle it as an assignment
+        if let Token::Identifier(name) = &self.current_token {
+            let peek_lexer = self.lexer.input.get(self.lexer.position);
+            // Quick lookahead to check for '='
+            if peek_lexer == Some(&'=') {
+                let var_name = name.clone();
+                self.advance(); // consume identifier
+                self.advance(); // consume '='
+                let expr = self.parser(); // parse the assigned expression
+                return ASTNode::Assignment {
+                    name: var_name,
+                    value: Box::new(expr),
+                };
+            }
+        }
 
-    // Receive the final metrics report from the background task before exiting
-    let final_seconds = rx.recv().await.unwrap_or(0);
-    
-    tracing::info!("Program finished cleanly.");
-    tracing::info!("Background task ran for total of {} seconds.", final_seconds);
+        // Otherwise, fall back to standard expressions
+        let mut left = match &self.current_token {
+            Token::Number(val) => {
+                let value = *val;
+                self.advance();
+                ASTNode::Number(value)
+            }
+            Token::Identifier(name) => {
+                let var_name = name.clone();
+                self.advance();
+                ASTNode::Variable(var_name)
+            }
+            _ => panic!("Expected a number or identifier, got {:?}", self.current_token),
+        };
+
+        while self.current_token == Token::Plus || self.current_token == Token::Minus {
+            let op = self.current_token.clone();
+            self.advance();
+            let right = match &self.current_token {
+                Token::Number(val) => {
+                    let value = *val;
+                    self.advance();
+                    ASTNode::Number(value)
+                }
+                Token::Identifier(name) => {
+                    let var_name = name.clone();
+                    self.advance();
+                    ASTNode::Variable(var_name)
+                }
+                _ => panic!("Expected a number or identifier after operator"),
+            };
+            left = ASTNode::BinaryOp {
+                left: Box::new(left),
+                op,
+                right: Box::new(right),
+            };
+        }
+        left
+    }
 }
 
-/// Background runner that respects cancellation and reports back via a channel
-async fn background_runner(token: CancellationToken, tx: mpsc::Sender<u32>) {
-    let mut seconds_elapsed = 0;
+#[derive(Debug, Clone, Copy)]
+enum Instruction {
+    Push(i32),
+    Load(usize),
+    Store(usize),
+    Add,
+    Subtract,
+}
 
-    loop {
-        tokio::select! {
-            // Check if shutdown was requested
-            _ = token.cancelled() => {
-                tracing::info!("Background runner received shutdown signal. Sending final metrics...");
-                let _ = tx.send(seconds_elapsed).await; // Send final count back to main
-                break;
+struct Compiler {
+    bytecode: Vec<Instruction>,
+}
+
+impl Compiler {
+    fn new() -> Self {
+        Self { bytecode: Vec::new() }
+    }
+
+    // Helper to map 'a'-'z' to variable vector indices 0-25
+    fn get_var_index(&self, name: &str) -> usize {
+        let ch = name.chars().next().unwrap();
+        (ch as usize) - ('a' as usize)
+    }
+
+    fn compile(&mut self, node: &ASTNode) {
+        match node {
+            ASTNode::Number(val) => {
+                self.bytecode.push(Instruction::Push(*val));
             }
-            // Otherwise, perform the periodic tick
-            _ = sleep(Duration::from_secs(1)) => {
-                seconds_elapsed += 1;
-                tracing::debug!("Background tick: {}s", seconds_elapsed);
+            ASTNode::Variable(name) => {
+                let idx = self.get_var_index(name);
+                self.bytecode.push(Instruction::Load(idx));
+            }
+            ASTNode::Assignment { name, value } => {
+                self.compile(value); // Compile value expression first to put result on top of the stack
+                let idx = self.get_var_index(name);
+                self.bytecode.push(Instruction::Store(idx));
+            }
+            ASTNode::BinaryOp { left, op, right } => {
+                self.compile(left);
+                self.compile(right);
+                match op {
+                    Token::Plus => self.bytecode.push(Instruction::Add),
+                    Token::Minus => self.bytecode.push(Instruction::Subtract),
+                    _ => unreachable!(),
+                }
             }
         }
     }
 }
 
-/// Executes concurrent operations handling idiomatic Results
-async fn do_stuffs() {
-    tracing::info!("Starting concurrent data fetches...");
+struct VM {
+    stack: Vec<i32>,
+    variables: Vec<i32>,
+}
+
+impl VM {
+    fn new() -> Self {
+        Self { stack: Vec::new(), variables: vec![0; 26] }
+    }
     
-    let task_one = fetch_data();
-    let task_two = fetch_data();
-
-    // Concurrently await both tasks
-    let (res1, res2) = tokio::join!(task_one, task_two);
-
-    match (res1, res2) {
-        (Ok(r1), Ok(r2)) => {
-            tracing::info!("Both concurrent tasks succeeded!");
-            tracing::info!("Task 1: {}, Task 2: {}", r1, r2);
+    fn run(&mut self, instructions: &[Instruction]) -> i32 {
+        for instruction in instructions {
+            match instruction {
+                Instruction::Push(val) => {
+                    self.stack.push(*val);
+                }
+                Instruction::Add => {
+                    let right = self.stack.pop().unwrap();
+                    let left = self.stack.pop().unwrap();
+                    self.stack.push(left + right);
+                }
+                Instruction::Subtract => {
+                    let right = self.stack.pop().unwrap();
+                    let left = self.stack.pop().unwrap();
+                    self.stack.push(left - right);
+                }
+                Instruction::Store(idx) => {
+                    // Peek at the top of stack or pop it to store into variable register
+                    self.variables[*idx] = *self.stack.last().unwrap_or(&0);
+                }
+                Instruction::Load(idx) => {
+                    self.stack.push(self.variables[*idx]);
+                }
+            }
         }
-        _ => tracing::error!("One or more concurrent tasks failed."),
+        self.stack.pop().unwrap_or(0)
     }
 }
 
-/// Simulates a real-world network fetch with robust Result types
-async fn fetch_data() -> Result<String, AppError> {
-    sleep(Duration::from_secs(2)).await;
+fn main() {
+    // Let's test allocating a variable and running math operations on it!
+    let mut vm = VM::new();
+
+    // 1. Compile and execute an assignment: "x = 15"
+    run_pipeline("x = 15", &mut vm);
+
+    // 2. Compile and execute an expression reading that variable: "x + 5 - 2"
+    run_pipeline("x + 5 - 2", &mut vm);
+}
+
+fn run_pipeline(source_code: &str, vm: &mut VM) {
+    println!("--- Processing: \"{}\" ---", source_code);
+
+    let lexer = Lexer::new(source_code);
+    let mut parser = Parser::new(lexer);
+    let ast = parser.parser();
     
-    // Simulate a successful fetch 90% of the time
-    if rand::random::<f32>() > 0.1 {
-        Ok(String::from("Hello from the elevated async world!"))
-    } else {
-        Err(AppError::FetchFailed)
+    let mut compiler = Compiler::new();
+    compiler.compile(&ast);
+    
+    for (ip, instr) in compiler.bytecode.iter().enumerate() {
+        println!("{:04} : {:?}", ip, instr);
     }
+
+    let result = vm.run(&compiler.bytecode);
+    println!("VM Stack Yield / Result: {}\n", result);
 }
