@@ -1,8 +1,0 @@
-field main() {
-    initial = 100
-    penalty = 25
-
-    score = initial - penalty
-    generate score
-
-}
