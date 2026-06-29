@@ -17,7 +17,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: Go
+        working-directory: GoWork
 
     steps:
       - uses: actions/checkout@v4
