@@ -4,19 +4,20 @@ on:
   push:
     branches: [main]
     paths:
-      - "**/*.go"
-      - "go.mod"
-      - "go.sum"
+      - "GoWork/**"
 
   pull_request:
+    branches: [main]
     paths:
-      - "**/*.go"
-      - "go.mod"
-      - "go.sum"
+      - "GoWork/**"
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: Go
 
     steps:
       - uses: actions/checkout@v4
@@ -29,8 +30,8 @@ jobs:
       - name: Download dependencies
         run: go mod tidy
 
-      - name: Build project
+      - name: Build
         run: go build ./...
 
-      - name: Run tests
+      - name: Test
         run: go test ./...
