@@ -1,19 +1,19 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
+func caller() {
+	time.Sleep(2000 * time.Millisecond)
+}
 
 func main() {
-	fmt.Println("Enter your name : ")
-	var name string
-	fmt.Scanln(&name)
-
-	if name != "" {
-		fmt.Printf("Hello , %s" ,name)
-	} else {
-		fmt.Println("Name can't be empty")
-	}
+	fmt.Println("Hello , ")
+	caller()
+	fmt.Print("...Sarthak")
 	
 	
-
+	
 }
