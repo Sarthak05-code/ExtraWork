@@ -11,4 +11,3 @@ broadcast-server.exe
 compile_flags.txt
 compile_commands.json
 .zed/
-.clangd
