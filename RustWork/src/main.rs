@@ -1,32 +1,13 @@
-use std::{
-    fs::File,
-    io::{self, Write},
-};
-
 fn main() {
-    println!("Enter file name:");
+    let num = 10;
+    let parse = num.to_string();
+    let added = parse + " " + "Sarthak";
+    println!("The value is a string: {}", added);
 
-    let mut file_name = String::new();
-    io::stdin().read_line(&mut file_name).unwrap();
-
-    let file_name = file_name.trim();
-    let full_path = format!("{}.txt", file_name);
-
-    let mut file = File::create(full_path).unwrap();
-
-    println!("Type something (type 'exit' to stop)");
-
-    loop {
-        let mut values = String::new();
-
-        io::stdin().read_line(&mut values).unwrap();
-
-        if values.trim() == "exit" {
-            break;
-        }
-
-        file.write_all(values.as_bytes()).unwrap();
+    let tupple = ("Apple" , 12 , true , 13.75); // being able to store different data type
+    println!("The tupple will run :{:?} ", tupple);
+    let statement = [1,2,3,4,5,6,7];
+    for stmt in statement {
+        print!("{stmt}\n");
     }
-
-    println!("Done!");
 }
