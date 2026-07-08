@@ -1,60 +1,32 @@
 package main
 
-import (
-	"fmt"
-	"strings" 
-)
-
-type Info struct {
-	name      string
-	age       int
-	bloodType string
-	gender    string
-}
+import "fmt"
 
 func main() {
-	var person Info
+	var no_of_id int
+	fmt.Print("Enter no of process : ")
+	fmt.Scanln(&no_of_id)
 
-	fmt.Println("Enter your name:")
-	fmt.Scanln(&person.name)
+	// Fix 1: Make a slice with 0 length but a capacity equal to no_of_id
+	array := make([]int, 0, no_of_id)
 
-	// --- Age Validation ---
-	for {
-		fmt.Println("Enter your age:")
-		// Capture errors in case they type a letter instead of a number
-		_, err := fmt.Scanln(&person.age) 
-		
-		if err == nil && person.age > 0 && person.age < 130 {
-			break // Age is valid, exit the loop
-		}
-		fmt.Println("Invalid age! Please enter a realistic number.")
-		
-		// If they typed letters, we need to clear the invalid input
-		if err != nil {
-			var discard string
-			fmt.Scanln(&discard)
-		}
+	for i := 0; i < no_of_id; i++ {
+		fmt.Printf("Enter your PID no %d resource: ", i+1)
+		var process_id int
+
+		// Fix 2: Actually scan the user input into process_id
+		fmt.Scanln(&process_id)
+
+		// Now append works perfectly!
+		array = append(array, process_id)
 	}
-
-	fmt.Println("Enter your bloodType:")
-	fmt.Scanln(&person.bloodType)
-
-	// --- Gender Validation ---
-	for {
-		fmt.Println("Enter your Gender (M/F):")
-		fmt.Scanln(&person.gender)
-		
-		// Convert whatever they typed to uppercase
-		person.gender = strings.ToUpper(person.gender) 
-
-		if person.gender == "M" || person.gender == "F" {
-			break // Input is valid, exit the loop
-		}
-		
-		// If it wasn't M or F, this message prints and the loop starts over
-		fmt.Println("Invalid input! Please type exactly 'M' or 'F'.")
+	total_resources := 0
+	fmt.Print("Stored PIDs: ")
+	// index is ignored (_), 'val' takes the actual integer value directly
+	for _, val := range array {
+		fmt.Printf("%d ", val)
+		total_resources += val
 	}
-
-	fmt.Printf("\n--- User Profile ---\n")
-	fmt.Printf("Name: %v\nAge: %d\nBlood Group: %v\nGender: %v\n", person.name, person.age, person.bloodType, person.gender)
+	fmt.Println()
+	fmt.Printf("The total resources in the array is : %d", total_resources)
 }
