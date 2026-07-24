@@ -1,52 +1,28 @@
 #include <stdio.h>
 
-// Function to calculate u term
-float backward_u_cal(float u, int n) {
-    float temp = u;
-    for (int i = 1; i < n; i++)
-        temp = temp * (u + i);
-    return temp;
-}
+void linearFit(float x[], float y[], int n) {
+    float sum_x = 0, sum_y = 0, sum_xy = 0, sum_x2 = 0;
 
-// Function to calculate factorial
-int fact(int n) {
-    int f = 1;
-    for (int i = 2; i <= n; i++)
-        f *= i;
-    return f;
-}
-
-void newton_backward(float x[], float y[][10], int n, float value) {
-    // Generating Backward Difference Table
-    for (int i = 1; i < n; i++) {
-        for (int j = n - 1; j >= i; j--) {
-            y[j][i] = y[j][i - 1] - y[j - 1][i - 1];
-        }
+    for (int i = 0; i < n; i++) {
+        sum_x += x[i];
+        sum_y += y[i];
+        sum_xy += x[i] * y[i];
+        sum_x2 += x[i] * x[i];
     }
 
-    // Initializing u and sum
-    float sum = y[n - 1][0];
-    float u = (value - x[n - 1]) / (x[1] - x[0]);
-    
-    for (int i = 1; i < n; i++) {
-        sum = sum + (backward_u_cal(u, i) * y[n - 1][i]) / fact(i);
-    }
+    // Formula for slope (a) and intercept (b)
+    float a = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x * sum_x);
+    float b = (sum_y - a * sum_x) / n;
 
-    printf("\nValue at %f using Newton Backward Interpolation is: %.4f\n", value, sum);
+    printf("Linear Fit Equation: y = %.4fx + %.4f\n", a, b);
 }
 
 int main() {
-    int n = 4;
-    float x[] = {10, 20, 30, 40};
-    
-    float y[10][10] = {0};
-    y[0][0] = 0.1736;
-    y[1][0] = 0.3420;
-    y[2][0] = 0.5000;
-    y[3][0] = 0.6428;
+    // Example dataset
+    float x[] = {1, 2, 3, 4, 5};
+    float y[] = {2, 3.5, 5, 6.5, 8};
+    int n = sizeof(x) / sizeof(x[0]);
 
-    float value = 38; // Interpolation point
-    newton_backward(x, y, n, value);
-    
+    linearFit(x, y, n);
     return 0;
 }

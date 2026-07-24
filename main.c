@@ -1,53 +1,32 @@
 #include <stdio.h>
-//Forward
-// Function to calculate u term
-float forward_u_cal(float u, int n) {
-    float temp = u;
-    for (int i = 1; i < n; i++)
-        temp = temp * (u - i);
-    return temp;
-}
+#include <math.h> // Required for log() and exp()
 
-// Function to calculate factorial
-int fact(int n) {
-    int f = 1;
-    for (int i = 2; i <= n; i++)
-        f *= i;
-    return f;
-}
+void exponentialFit(float x[], float y[], int n) {
+    float sum_x = 0, sum_Y = 0, sum_xY = 0, sum_x2 = 0;
 
-void newton_forward(float x[], float y[][10], int n, float value) {
-    // Generating Forward Difference Table
-    for (int i = 1; i < n; i++) {
-        for (int j = 0; j < n - i; j++) {
-            y[j][i] = y[j + 1][i - 1] - y[j][i - 1];
-        }
+    for (int i = 0; i < n; i++) {
+        float Y = log(y[i]); // Transform y to ln(y)
+        sum_x += x[i];
+        sum_Y += Y;
+        sum_xY += x[i] * Y;
+        sum_x2 += x[i] * x[i];
     }
 
-    // Initializing u and sum
-    float sum = y[0][0];
-    float u = (value - x[0]) / (x[1] - x[0]);
+    // Solve for b and A (where A = ln(a))
+    float b = (n * sum_xY - sum_x * sum_Y) / (n * sum_x2 - sum_x * sum_x);
+    float A = (sum_Y - b * sum_x) / n;
     
-    for (int i = 1; i < n; i++) {
-        sum = sum + (forward_u_cal(u, i) * y[0][i]) / fact(i);
-    }
+    float a = exp(A); // Convert A back to a
 
-    printf("\nValue at %f using Newton Forward Interpolation is: %.4f\n", value, sum);
+    printf("Exponential Fit Equation: y = %.4f * e^(%.4fx)\n", a, b);
 }
 
 int main() {
-    int n = 4;
-    float x[] = {10, 20, 30, 40};
-    
-    // y[][0] is used for storing input y-values
-    float y[10][10] = {0};
-    y[0][0] = 0.1736;
-    y[1][0] = 0.3420;
-    y[2][0] = 0.5000;
-    y[3][0] = 0.6428;
+    // Example dataset (y values must be > 0 for log)
+    float x[] = {1, 2, 3, 4, 5};
+    float y[] = {2.7, 7.4, 20.1, 54.6, 148.4};
+    int n = sizeof(x) / sizeof(x[0]);
 
-    float value = 15; // Interpolation point
-    newton_forward(x, y, n, value);
-    
+    exponentialFit(x, y, n);
     return 0;
 }
