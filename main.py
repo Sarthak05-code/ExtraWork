@@ -17,7 +17,7 @@ def main():
     print(array)
     print(array_2)
 
-    for value1, value2 in enumerate(zip(array, array_2)):
+    for value1, value2 in zip(array, array_2):
         if value1 == value2:
             print(f"\nThis value {value1} {value2} match")
         else:
