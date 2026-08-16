@@ -13,3 +13,5 @@ compile_commands.json
 .zed/
 .clangd
 KeymapHelper.txt
+
+__pycache__
