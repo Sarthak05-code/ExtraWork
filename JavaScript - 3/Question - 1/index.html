@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Student Result Management System</title>
+
+        <!-- Connect CSS -->
+        <link rel="stylesheet" href="style.css" />
+    </head>
+
+    <body>
+        <h2>Student Result Management System</h2>
+
+        <form>
+            <label>Student Name:</label>
+            <input type="text" id="name" />
+            <br /><br />
+
+            <label>Subject 1:</label>
+            <input type="number" id="m1" onchange="validateMarks(this)" />
+            <br /><br />
+
+            <label>Subject 2:</label>
+            <input type="number" id="m2" onchange="validateMarks(this)" />
+            <br /><br />
+
+            <label>Subject 3:</label>
+            <input type="number" id="m3" onchange="validateMarks(this)" />
+            <br /><br />
+
+            <label>Subject 4:</label>
+            <input type="number" id="m4" onchange="validateMarks(this)" />
+            <br /><br />
+
+            <label>Subject 5:</label>
+            <input type="number" id="m5" onchange="validateMarks(this)" />
+            <br /><br />
+
+            <button type="button" onclick="calculateResult()">Calculate</button>
+        </form>
+
+        <!-- Result section -->
+        <div
+            id="result"
+            onmouseover="highlightResult()"
+            onmouseout="removeHighlight()"
+        >
+            Result will appear here
+        </div>
+
+        <!-- Connect JavaScript -->
+        <script src="script.js"></script>
+    </body>
+</html>

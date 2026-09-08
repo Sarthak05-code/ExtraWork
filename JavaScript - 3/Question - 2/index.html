@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>To - do App</title>
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <h2>Dynamic To-do List</h2>
+        <form onsubmit="addTask(event)">
+            <input
+                type="text"
+                id="taskInput"
+                name="taskInput"
+                placeholder="Enter a task Name"
+            />
+            <button type="submit">Add Task</button>
+        </form>
+
+        <h3>My Tasks</h3>
+        <ul id="taskList"></ul>
+
+        <p id="count">
+            Pendinf : 0 | Completed : 0
+        </p>
+
+
+        <script src="script.js"></script>
+    </body>
+</html>
