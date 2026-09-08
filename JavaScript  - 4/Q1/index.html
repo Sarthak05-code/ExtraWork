@@ -1,0 +1,40 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Result</title>
+</head>
+
+<body>
+
+    <h2>Student Result Form</h2>
+
+    <form action="result.php" method="POST">
+
+        <label>Student Name:</label>
+        <input type="text" name="name" required>
+        <br><br>
+
+        <label>Age:</label>
+        <input type="number" name="age" required>
+        <br><br>
+
+        <label>Subject 1 Marks:</label>
+        <input type="number" name="m1" min="0" max="100" required>
+        <br><br>
+
+        <label>Subject 2 Marks:</label>
+        <input type="number" name="m2" min="0" max="100" required>
+        <br><br>
+
+        <label>Subject 3 Marks:</label>
+        <input type="number" name="m3" min="0" max="100" required>
+        <br><br>
+
+        <input type="submit" value="Calculate Result">
+
+    </form>
+
+</body>
+</html>
+
